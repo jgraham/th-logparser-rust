@@ -1,0 +1,11 @@
+[package]
+name = "logparser"
+version = "0.1.0"
+authors = ["James Graham <james@hoppipolla.co.uk>"]
+
+[dependencies]
+chrono = "0.2"
+lazy_static = "0.1"
+regex = "0.1"
+rustc-serialize = "0.3"
+time = "0.1"
