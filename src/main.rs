@@ -12,9 +12,12 @@ use logparser::parse_log;
 
 fn main() {
     let url =
-        "https://public-artifacts.taskcluster.net/SQcZMzk4SYm_ppI6rXhWcQ/0/public/logs/live_backing.log";
-    let user_agent = "Log Parser Test"; let artifacts = parse_log(url,
-    user_agent); for artifact in artifacts.iter() { println!("{}",
-    artifact); }
+        "http://archive.mozilla.org/pub/firefox/tinderbox-builds/mozilla-inbound-linux64-st-an-debug/1460667041/mozilla-inbound-linux64-st-an-debug-bm74-build1-build694.txt.gz";
+    let user_agent = "Log Parser Test";
+    let artifacts = parse_log(url, user_agent);
+    println!("Got {} artifacts", artifacts.len());
+    for artifact in artifacts.iter() {
+        println!("{}", artifact);
+    }
 
 }

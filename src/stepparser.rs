@@ -311,7 +311,7 @@ impl LogParser for StepParser {
     fn name(&self) -> &'static str {
         "step_data"
     }
-
+    
     fn parse_line(&mut self, line: &str, line_number: u32) {
         let trimmed = line.trim_left();
 

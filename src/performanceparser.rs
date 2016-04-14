@@ -1,6 +1,6 @@
 use logparser::LogParser;
 use regex::Regex;
-use rustc_serialize::json::{self, Json};
+use rustc_serialize::json;
 use std::mem;
 
 lazy_static! {
@@ -9,7 +9,7 @@ lazy_static! {
 }
 
 pub struct PerformanceParser {
-    artifact: Vec<Json>,
+    artifact: Vec<String>,
 }
 
 impl PerformanceParser {
@@ -29,7 +29,10 @@ impl LogParser for PerformanceParser {
         if RE_PERFORMANCE.is_match(line) {
             let matches = RE_PERFORMANCE.captures(line).unwrap();
             let json_data = matches.name("data").unwrap_or("{}");
-            self.artifact.push(Json::from_str(json_data).unwrap());
+            // The rust JSON parser is spec-compliant, but the Python one is not and allows
+            // NaN as a number. To work around this just push the string here and reparse
+            // the result on the python side
+            self.artifact.push(json_data.into());
         }
     }
 

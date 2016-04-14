@@ -12,7 +12,6 @@ pub mod http;
 pub mod logparser;
 pub mod performanceparser;
 pub mod stepparser;
-pub mod talosparser;
 pub mod tinderboxparser;
 
 use libc::c_char;
@@ -28,7 +27,6 @@ pub fn parse_log(url: &str, user_agent: &str) -> Vec<String> {
 
     let mut step_parser = stepparser::StepParser::new();
     let mut tinderbox_parser = tinderboxparser::TinderboxParser::new();
-    let mut talos_parser = talosparser::TalosParser::new();
     let mut performance_parser = performanceparser::PerformanceParser::new();
 
     let mut final_line_number = 0;
@@ -36,7 +34,6 @@ pub fn parse_log(url: &str, user_agent: &str) -> Vec<String> {
         if let Ok(line) = maybe_line {
             parse_line(&mut step_parser, &*line, line_number as u32);
             parse_line(&mut tinderbox_parser, &*line, line_number as u32);
-            parse_line(&mut talos_parser, &*line, line_number as u32);
             parse_line(&mut performance_parser, &*line, line_number as u32);
             final_line_number = line_number as u32;
         }
@@ -44,7 +41,6 @@ pub fn parse_log(url: &str, user_agent: &str) -> Vec<String> {
 
     finish_parse(&mut step_parser, final_line_number, &*url, &mut rv);
     finish_parse(&mut tinderbox_parser, final_line_number, &*url, &mut rv);
-    finish_parse(&mut talos_parser, final_line_number, &*url, &mut rv);
     finish_parse(&mut performance_parser, final_line_number, &*url, &mut rv);
     rv
 }
