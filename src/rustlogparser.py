@@ -8,43 +8,33 @@ extension = {'darwin': '.dylib', 'win32': '.dll'}.get(sys.platform, '.so')
 lib = ctypes.cdll.LoadLibrary(prefix + "logparser" + extension)
 
 
-class StepParserStruct(Structure):
-    pass
+lib.parse_artifact.argtypes = (c_char_p, c_char_p)
+lib.parse_artifact.restype = c_char_p
 
-lib.step_parser_new.restype = POINTER(StepParserStruct)
-lib.step_parser_free.argtypes = (POINTER(StepParserStruct),)
-lib.step_parser_clear.argtypes = (POINTER(StepParserStruct),)
-lib.step_parser_parse_line.args = (POINTER(StepParserStruct), c_char_p, c_uint32)
-lib.step_parser_finish_parse.args = (POINTER(StepParserStruct), c_uint32)
-lib.step_parser_get_artifact.argtypes = (POINTER(StepParserStruct),)
-lib.step_parser_get_artifact.restype = c_char_p
-lib.step_parser_free_artifact.argtypes = (c_char_p,)
+class ArtifactBuilderCollection(object):
+    def __init__(self, url, user_agent="Log Parser"):
+        self.url = url
+        self.user_agent = user_agent
+        self.artifacts = {}
+        self.key_map = {
+            "job_details": ("Job Info", True)
+            "step_data": ("text_log_summary", True)
+            "talos_data": ("talos_data", False),
+            "performance_data": ("performance_data", False)
+        }
 
-class StepParser(object):
-    def __init__(self, name):
-        self.name = name
-        self.obj = None
+    def parse(self):
+        data = lib.parse_artifact(self.url, self.user_agent)
+        for artifact_str in data.split("\0"):
+            artifact = json.parse(artifact_str)
+            for key in artifact.keys():
+                if key in self.key_map:
+                    # Stupid cleanup that should be done on the rust side
+                    for subkey in artifact[key].keys():
+                        if artifact[key][subkey] is None:
+                            del artifact[key][subkey]
 
-    def __enter__(self):
-        self.obj = lib.step_parser_new()
-
-    def __exit__(self, *args, **kwargs):
-        if self.obj:
-            lib.step_parser_free(self.obj)
-            self.obj = None
-
-    def clear(self):
-        lib.step_parser_clear(self.obj)
-        self.complete = False
-
-    def parse_line(self, line, line_number):
-        lib.step_parser_parse_line(self.obj, line, line_number)
-
-    def finish_parse(self, last_line_number):
-        lib.step_parser_finish_parse(self.obj, last_line_number)
-
-    def get_artifact(self):
-        artifact = lib.step_parser.get_artifact(self.obj)
-        rv = json.loads(artifact)
-        lib.step_parser_free_artifact(artifact)
-        return rv
+                    name, required = self.key_map[key]
+                    if not artifact and not required:
+                        continue
+                    self.artifacts[name] = artifact

@@ -10,9 +10,8 @@ regex = "0.1"
 rustc-serialize = "0.3"
 time = "0.1"
 libc = "0.2.0"
+hyper = "0.8"
+flate2 = "0.2.13"
 
 [lib]
-crate-type = ["dylib"]
-
-[target.i686-unknown-linux-gnu.dependencies]
-libc = "0.2.0"
+crate-type = ["rlib", "dylib"]

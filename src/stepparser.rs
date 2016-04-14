@@ -308,6 +308,10 @@ impl StepParser {
 }
 
 impl LogParser for StepParser {
+    fn name(&self) -> &'static str {
+        "step_data"
+    }
+
     fn parse_line(&mut self, line: &str, line_number: u32) {
         let trimmed = line.trim_left();
 
@@ -356,27 +360,12 @@ impl LogParser for StepParser {
         }
     }
 
-    fn clear(&mut self) {
-        self.state = StepState::AwaitingFirstStep;
-        self.artifact = StepData::new(); 
-        self.step_number = 0;
+    fn has_artifact(&self) -> bool {
+        self.artifact.all_errors.len() > 0
     }
-
+    
     fn get_artifact(&mut self) -> String {
         let artifact = mem::replace(&mut self.artifact, StepData::new());
-        json::encode(&StepDataArtifact::new(artifact)).unwrap()
-    }
-}
-
-#[derive(RustcEncodable)]
-struct StepDataArtifact {
-    step_data: StepData
-}
-
-impl StepDataArtifact {
-    fn new(step_data: StepData) -> StepDataArtifact {
-        StepDataArtifact {
-            step_data: step_data
-        }
+        json::encode(&artifact).unwrap()
     }
 }
