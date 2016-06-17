@@ -3,8 +3,8 @@ rust:
   - stable
 script: cargo build --release
 after_success:
-  - tar -czf target/release/liblogparser.so
-  - tar -czf target/release/logparser
+  - tar -czf target/release/liblogparser.so.tar.gz target/release/liblogparser.so
+  - tar -czf target/release/logparser.tar.gz target/release/logparser
 deploy:
   provider: releases
   api_key:
