@@ -2,13 +2,16 @@ language: rust
 rust:
   - stable
 script: cargo build --release
+after_success:
+  - tar -xzf target/release/liblogparser.so
+  - tar -xzf target/release/logparser
 deploy:
   provider: releases
   api_key:
     secure:
       MqeH7I4MnSMjr7jATIj26St4L75nCZHlQ//JgEPlxijvhwTQ9HGwJOSzbebIqEYB7hfcwIsiGnx2nN0RrM4vroXBqiYXZbyypxjAdOPb3rqPbbz1LacHBKAlMRUpOkR6Q8tzlB5m7AanLjPnoCcTPLLfJW3hu0Ijtkf9slkGryFAsZS0Xn3XpoqghDDYZO0VGyDS279oNeG71FnbMKgu9fo+XDNscGLM2zFps8cZ/DRSoy2e0UJPjHRBUxL1qjUlMMHyGdjGBpEy98mrUEem+Q4e57Mm8aPvdAoAMGZr9il1Kgcj2Bw0uU/d6AnQx8k904Rwv8/YSN+tJH6Lj8Kwm5UmCLMIeDbxkxFe7V0+kmqLQSQAnU5aymg7kQShxZpzykQ+HvZ/jpA2jIUN/DlSWcwYpGvVpYWfws2FHpFdxTNw1WN5rZX9TyxdXSorgOsEgfLU9V/MWy7Nez9uw7ysAGHiinhkC0vV2hJrhH7/mO1/r2v8ogjtkwUFhjZYhL/vWHTT8seChkYM19TMplRfVR56PJGd6EpnOt6dqs7meq3s5pXxQHpWwSgYdkbGVVGDlCCmaUuK26DrN1qK4Z91OmKM6MPff7fBwhClKa1q7SAwqoJisLMUGTNE8FTkXRkHHMYavGk4wb7OR1gMPm79SBBM53MqnKnK8pzk0zWmlks=
   file:
-    - "target/release/logparser"
-    - "target/release/liblogparser.so"
+    - "target/release/logparser.tar.gz"
+    - "target/release/liblogparser.so.tar.gz"
   skip_cleanup: true
   overwrite: true
