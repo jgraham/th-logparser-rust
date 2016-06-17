@@ -1,5 +1,5 @@
-use logparser::LogParser;
-use regex::{Regex, RegexSet};
+use logparser::{LogParser, LogParserError};
+use regex::Regex;
 use rustc_serialize::json::{self, Json, ToJson};
 use rustc_serialize::{Encodable, Encoder};
 use std::mem;
@@ -9,7 +9,7 @@ lazy_static! {
         Regex::new(r"TinderboxPrint: ?(?P<line>.*)$").unwrap();
 
     static ref RE_TALOSRESULT: Regex =
-        Regex::new("^TalosResult: ").unwrap();
+        Regex::new("^TalosResult: ?(?P<value>.*)").unwrap();
 
     static ref RE_UPLOADED_TO: Regex =
         Regex::new(r#"<a href=['"](?P<url>http(s)?://.*)['"]>(?P<value>.+)</a>: uploaded"#).unwrap();
@@ -81,28 +81,32 @@ impl LogParser for TinderboxParser {
         "job_details"
     }
     
-    fn parse_line(&mut self, line: &str, _line_number: u32) {
+    fn parse_line(&mut self, line: &str, _line_number: u32) -> Result<(), LogParserError> {
         if !RE_TINDERBOXPRINT.is_match(line) {
-            return
+            return Ok(());
         }
         
         let matches = RE_TINDERBOXPRINT.captures(line);
         if matches.is_none() {
-            return;
+            return Ok(());
         }
         let line = matches.unwrap().name("line");
         if line.is_none() {
-            return;
+            return Ok(());
         }
         let line = line.unwrap();
         if RE_TALOSRESULT.is_match(line) {
-            let mut parts = line.splitn(1, ":");
-            let title = parts.next();
-            let json_value = parts.next().unwrap();
-            self.artifact.push(TinderboxData::new(title, ContentType::TalosResult,
-                                                  Json::from_str(json_value).unwrap(),
+            let title = "TalosResult";
+            //TODO: Need an error here
+            let captures = RE_TALOSRESULT.captures(line);
+            let json_value = captures
+                .expect("RE matched once but not twice")
+                .name("value").unwrap_or("{}");
+            self.artifact.push(TinderboxData::new(Some(title),
+                                                  ContentType::TalosResult,
+                                                  try!(Json::from_str(json_value)),
                                                   None));
-            return
+            return Ok(());
         }
 
         //TODO: replace this loop with RegexSet
@@ -115,10 +119,12 @@ impl LogParser for TinderboxParser {
                 if value.is_none() && url.is_some() {
                     value = url.map(|x| x.to_owned());
                 }
-                let artifact = TinderboxData::new(title, ContentType::Link,
-                                                  value.to_json(), url);
+                let artifact = TinderboxData::new(title,
+                                                  ContentType::Link,
+                                                  value.to_json(),
+                                                  url);
                 self.artifact.push(artifact);
-                return
+                return Ok(());
             }
         }
 
@@ -132,6 +138,7 @@ impl LogParser for TinderboxParser {
         let artifact = TinderboxData::new(title, ContentType::RawHtml, value.to_json(),
                                           None);
         self.artifact.push(artifact);
+        Ok(())
     }
 
     fn has_artifact(&self) -> bool {

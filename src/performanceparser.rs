@@ -1,4 +1,4 @@
-use logparser::LogParser;
+use logparser::{LogParser, LogParserError};
 use regex::Regex;
 use rustc_serialize::json;
 use std::mem;
@@ -25,7 +25,7 @@ impl LogParser for PerformanceParser {
         "performance_data"
     }
     
-    fn parse_line(&mut self, line: &str, _line_number: u32) {
+    fn parse_line(&mut self, line: &str, _line_number: u32) -> Result<(), LogParserError> {
         if RE_PERFORMANCE.is_match(line) {
             let matches = RE_PERFORMANCE.captures(line).unwrap();
             let json_data = matches.name("data").unwrap_or("{}");
@@ -33,7 +33,8 @@ impl LogParser for PerformanceParser {
             // NaN as a number. To work around this just push the string here and reparse
             // the result on the python side
             self.artifact.push(json_data.into());
-        }
+        };
+        Ok(())
     }
 
     fn has_artifact(&self) -> bool {

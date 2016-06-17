@@ -1,10 +1,10 @@
 use chrono::{UTC, TimeZone};
+use logparser::{LogParser, LogParserError};
 use regex::{Regex, RegexSet};
-use rustc_serialize::{Encodable, Encoder};
 use rustc_serialize::json::{self, Json, ToJson};
+use rustc_serialize::{Encodable, Encoder};
 use std::convert::From;
 use std::mem;
-use logparser::LogParser;
 
 static PARSER_MAX_STEP_ERROR_LINES: u8 = 100;
 
@@ -312,17 +312,17 @@ impl LogParser for StepParser {
         "step_data"
     }
     
-    fn parse_line(&mut self, line: &str, line_number: u32) {
+    fn parse_line(&mut self, line: &str, line_number: u32) -> Result<(), LogParserError> {
         let trimmed = line.trim_left();
 
         if trimmed.is_empty() {
-            return;
+            return Ok(());
         }
 
         match self.state {
             StepState::AwaitingFirstStep => {
                 if RE_HEADER_LINE.is_match(trimmed) {
-                    return
+                    return Ok(());
                 }
             }
             _ => {}
@@ -351,6 +351,7 @@ impl LogParser for StepParser {
                 }
             }
         }
+        Ok(())
     }
 
     fn finish_parse(&mut self, last_line_number: u32) {
