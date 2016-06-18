@@ -19,7 +19,9 @@ lazy_static! {
 
     static ref RE_LINK_TEXT: Regex =
         Regex::new(r"((?P<title>[A-Za-z/\.0-9-_ ]+): )?(?P<url>http(s)?://.*)").unwrap();
-    
+
+    static ref RE_BR_ELEMENT: Regex =
+        Regex::new(r"<br/>").unwrap();
 
     static ref TINDERBOX_REGEXPS: [(&'static Regex, Option<&'static str>); 3] =
         [(&*RE_UPLOADED_TO, Some("artifact uploaded")),
@@ -80,12 +82,12 @@ impl LogParser for TinderboxParser {
     fn name(&self) -> &'static str {
         "job_details"
     }
-    
+
     fn parse_line(&mut self, line: &str, _line_number: u32) -> Result<(), LogParserError> {
         if !RE_TINDERBOXPRINT.is_match(line) {
             return Ok(());
         }
-        
+
         let matches = RE_TINDERBOXPRINT.captures(line);
         if matches.is_none() {
             return Ok(());
@@ -129,7 +131,7 @@ impl LogParser for TinderboxParser {
         }
 
         // Default case
-        let parts: Vec<&str> = line.splitn(1, "<br/>").collect();
+        let parts: Vec<&str> = RE_BR_ELEMENT.splitn(line, 2).collect();
         let (title, value) = if parts.len() == 1 {
             (None, line)
         } else {
@@ -144,7 +146,7 @@ impl LogParser for TinderboxParser {
     fn has_artifact(&self) -> bool {
         self.artifact.len() > 0
     }
-    
+
     fn get_artifact(&mut self) -> String {
         let artifact = mem::replace(&mut self.artifact, vec![]);
         json::encode(&artifact).unwrap()
