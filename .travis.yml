@@ -1,7 +1,16 @@
-language: rust
-rust:
-  - stable
-script: cargo build --release
+language: generic
+sudo: required
+dist: trusty
+addons:
+  apt:
+    packages:
+      - musl-tools
+install:
+  - export PATH="$PATH:$HOME/.cargo/bin"
+  - curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=stable
+  - rustup target add x86_64-unknown-linux-musl
+script:
+  - cargo build --release --target x86_64-unknown-linux-musl
 after_success:
   - tar -czf target/release/liblogparser.so.tar.gz target/release/liblogparser.so
   - tar -czf target/release/logparser.tar.gz target/release/logparser
